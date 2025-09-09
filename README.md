@@ -25,9 +25,40 @@ ai-agent-project/
 
 ## Setup Instructions
 
-### 1. Install Dependencies
+### Quick Setup (macOS)
 
 ```bash
+# Clone the repository
+git clone https://github.com/rohitashbishnoi91/ai-agent-project.git
+cd ai-agent-project
+
+# Run the installation script
+./install.sh
+```
+
+### Manual Setup
+
+#### 1. Install System Dependencies (macOS)
+
+```bash
+brew install libxml2 libxslt
+```
+
+#### 2. Set Environment Variables
+
+```bash
+export LDFLAGS="-L/opt/homebrew/opt/libxml2/lib -L/opt/homebrew/opt/libxslt/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/libxml2/include -I/opt/homebrew/opt/libxslt/include"
+```
+
+#### 3. Install Python Dependencies
+
+```bash
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
 ```
 
