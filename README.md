@@ -62,7 +62,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Set up Free API Key (Optional)
+### 4. Set up Free API Key (Optional)
 
 The agent works perfectly without any API keys! But for enhanced AI responses, you can add:
 
@@ -73,6 +73,33 @@ echo "HUGGINGFACE_API_KEY=your_huggingface_token_here" > .env
 Get your free token at: https://huggingface.co/settings/tokens
 
 **Note:** Hugging Face API access may vary. If you encounter errors, the agent will automatically use the intelligent fallback system.
+
+## Troubleshooting
+
+### lxml Build Error on macOS
+
+If you encounter the error "Please make sure the libxml2 and libxslt development packages are installed":
+
+1. **Install system dependencies:**
+   ```bash
+   brew install libxml2 libxslt
+   ```
+
+2. **Set environment variables:**
+   ```bash
+   export LDFLAGS="-L/opt/homebrew/opt/libxml2/lib -L/opt/homebrew/opt/libxslt/lib"
+   export CPPFLAGS="-I/opt/homebrew/opt/libxml2/include -I/opt/homebrew/opt/libxslt/include"
+   ```
+
+3. **Try pre-compiled wheels:**
+   ```bash
+   pip install --only-binary=all lxml
+   ```
+
+4. **If that fails, try with system libraries:**
+   ```bash
+   pip install lxml
+   ```
 
 **Note:** Without API key, the agent uses intelligent fallback responses from scraped content.
 

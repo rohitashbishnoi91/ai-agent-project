@@ -28,7 +28,17 @@ source venv/bin/activate
 
 # Install Python dependencies
 echo "📚 Installing Python dependencies..."
-pip install --upgrade pip
+pip install --upgrade pip setuptools wheel
+
+# Try to install lxml with pre-compiled wheels first
+echo "🔧 Installing lxml (trying pre-compiled wheels first)..."
+pip install --only-binary=all lxml || {
+    echo "⚠️  Pre-compiled wheels failed, trying with system libraries..."
+    pip install lxml
+}
+
+# Install remaining dependencies
+echo "📦 Installing remaining dependencies..."
 pip install -r requirements.txt
 
 echo "✅ Installation complete!"
