@@ -4,3 +4,4 @@ beautifulsoup4==4.12.2
 python-dotenv==1.0.0
 lxml==4.9.3
 huggingface_hub==0.34.4
+soupsieve==2.8
