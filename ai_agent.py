@@ -27,17 +27,41 @@ class ArymalabsAgent:
         return "Hello! I'm the Aryma Labs AI Agent. I can help you learn about our MMM Services, MMM Products, or Experimentation Products. What would you like to know?"
     
     def handle_general_query(self, user_input: str) -> str:
-        """Handle general queries about Aryma Labs"""
+        """Handle general queries about Aryma Labs with dynamic content selection"""
         print(f"🌐 [GENERAL] Handling general query: {user_input[:50]}...")
         
         # Get all available content for general queries
         all_content = ""
-        for category, content in self.scraped_data.get("categorized_content", {}).items():
-            all_content += f"\n\n{category}:\n{content}"
         
-        # Add main content if available
+        # Add main content first if available
         if self.scraped_data.get("main_content"):
-            all_content = self.scraped_data["main_content"] + all_content
+            all_content = self.scraped_data["main_content"]
+        
+        # Add categorized content with some variation
+        categorized_content = self.scraped_data.get("categorized_content", {})
+        
+        # Vary the order and selection based on user input
+        user_input_lower = user_input.lower()
+        if "product" in user_input_lower:
+            # Prioritize product content
+            for category, content in categorized_content.items():
+                if "product" in category.lower():
+                    all_content += f"\n\n{category}:\n{content}"
+            for category, content in categorized_content.items():
+                if "product" not in category.lower():
+                    all_content += f"\n\n{category}:\n{content}"
+        elif "service" in user_input_lower:
+            # Prioritize service content
+            for category, content in categorized_content.items():
+                if "service" in category.lower():
+                    all_content += f"\n\n{category}:\n{content}"
+            for category, content in categorized_content.items():
+                if "service" not in category.lower():
+                    all_content += f"\n\n{category}:\n{content}"
+        else:
+            # Default order
+            for category, content in categorized_content.items():
+                all_content += f"\n\n{category}:\n{content}"
         
         if not all_content.strip():
             all_content = "Aryma Labs is a company specializing in Marketing Mix Modeling (MMM) solutions, products, and experimentation services."
@@ -112,23 +136,52 @@ class ArymalabsAgent:
                 # Use summarization task which works with the current API
                 try:
                     print("📊 [AI AGENT] Attempting Hugging Face summarization...")
-                    # Create a dynamic context for summarization
+                    # Create a dynamic context for summarization with unique prompts
+                    import time
+                    timestamp = int(time.time())
+                    
                     if category == "GENERAL":
-                        context = f"""Aryma Labs is a company that provides Marketing Mix Modeling (MMM) solutions, products, and experimentation services.
+                        # Vary the prompt based on user input to get different responses
+                        if "about" in user_input.lower() or "what is" in user_input.lower():
+                            context = f"""Company Overview: Aryma Labs provides Marketing Mix Modeling (MMM) solutions, products, and experimentation services.
 
-Available information about Aryma Labs: {relevant_content[:1500]}
+Company Information: {relevant_content[:1500]}
 
-User question: {user_input}
+User Question: {user_input}
 
-Please provide a comprehensive and helpful response about Aryma Labs based on the information above. Be specific and informative."""
+Please provide a detailed company overview and explain what Aryma Labs does, their services, and how they help businesses. Be comprehensive and informative."""
+                        elif "contact" in user_input.lower() or "demo" in user_input.lower():
+                            context = f"""Contact Information: Aryma Labs offers various ways to get in touch and request demos.
+
+Company Details: {relevant_content[:1500]}
+
+User Question: {user_input}
+
+Please provide information about how to contact Aryma Labs, request demos, and get in touch with their team. Include relevant contact methods and next steps."""
+                        elif "product" in user_input.lower():
+                            context = f"""Product Information: Aryma Labs offers various MMM products and tools.
+
+Product Details: {relevant_content[:1500]}
+
+User Question: {user_input}
+
+Please provide detailed information about Aryma Labs' products, tools, and platforms. Explain what each product does and how it helps businesses."""
+                        else:
+                            context = f"""General Information: Aryma Labs is a Marketing Mix Modeling company.
+
+Available Information: {relevant_content[:1500]}
+
+User Question: {user_input}
+
+Please provide a helpful and informative response about Aryma Labs based on the available information. Focus on answering the specific question asked."""
                     else:
-                        context = f"""Aryma Labs specializes in {CATEGORIES.get(category, category)}. 
+                        context = f"""Service/Product Details: Aryma Labs specializes in {CATEGORIES.get(category, category)}. 
 
-Available content about {CATEGORIES.get(category, category)}: {relevant_content[:1500]}
+Detailed Information: {relevant_content[:1500]}
 
-User question: {user_input}
+User Question: {user_input}
 
-Please provide a detailed and helpful response about {CATEGORIES.get(category, category)} based on the content above. Be specific and informative."""
+Please provide a comprehensive response about {CATEGORIES.get(category, category)} from Aryma Labs. Explain the benefits, features, and how it helps businesses."""
                     
                     # Use summarization to generate response
                     response = self.hf_client.summarization(context)
