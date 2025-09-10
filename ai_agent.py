@@ -2,13 +2,15 @@ import json
 import os
 import requests
 from typing import Dict, List, Optional
-from huggingface_hub import InferenceClient
+import requests
 from config import HUGGINGFACE_API_KEY, CATEGORIES, DEMO_URL
 
 class ArymalabsAgent:
     def __init__(self, scraped_data_path: str = "scraped_content.json"):
         self.hf_api_key = HUGGINGFACE_API_KEY
-        self.hf_client = InferenceClient(token=self.hf_api_key) if self.hf_api_key else None
+        # Use Hugging Face Router API directly with requests
+        self.hf_api_key = HUGGINGFACE_API_KEY
+        self.api_url = "https://router.huggingface.co/v1/chat/completions"
         self.scraped_data = self.load_scraped_data(scraped_data_path)
         self.conversation_history = []
         self.user_category = None
@@ -129,99 +131,77 @@ class ArymalabsAgent:
         print(f"\n🤖 [AI AGENT] Generating response for category: {category}")
         print(f"📝 [AI AGENT] User input: {user_input[:100]}...")
         
-        # Try Hugging Face InferenceClient first
-        if self.hf_client:
-            print("🔑 [AI AGENT] Hugging Face client available, attempting AI generation...")
+        # Try Hugging Face Router API first
+        if self.hf_api_key:
+            print("🔑 [AI AGENT] Hugging Face Router API available, attempting AI generation...")
             try:
-                # Use summarization task which works with the current API
-                try:
-                    print("📊 [AI AGENT] Attempting Hugging Face summarization...")
-                    # Create a dynamic context for summarization with unique prompts
-                    import time
-                    timestamp = int(time.time())
-                    
-                    if category == "GENERAL":
-                        # Vary the prompt based on user input to get different responses
-                        if "about" in user_input.lower() or "what is" in user_input.lower():
-                            context = f"""Company Overview: Aryma Labs provides Marketing Mix Modeling (MMM) solutions, products, and experimentation services.
+                # Create a conversational prompt
+                if category == "GENERAL":
+                    if "about" in user_input.lower() or "what is" in user_input.lower():
+                        system_prompt = f"""You are a helpful AI assistant for Aryma Labs, a Marketing Mix Modeling company. 
 
-Company Information: {relevant_content[:1500]}
+Based on this information about Aryma Labs: {relevant_content[:1000]}
 
-User Question: {user_input}
+Please provide natural, conversational responses about Aryma Labs. Be helpful and informative."""
+                    elif "contact" in user_input.lower() or "demo" in user_input.lower():
+                        system_prompt = f"""You are a helpful AI assistant for Aryma Labs. 
 
-Please provide a detailed company overview and explain what Aryma Labs does, their services, and how they help businesses. Be comprehensive and informative."""
-                        elif "contact" in user_input.lower() or "demo" in user_input.lower():
-                            context = f"""Contact Information: Aryma Labs offers various ways to get in touch and request demos.
+Based on this information: {relevant_content[:1000]}
 
-Company Details: {relevant_content[:1500]}
+Please provide information about contacting Aryma Labs and requesting demos. Be helpful and conversational."""
+                    elif "product" in user_input.lower():
+                        system_prompt = f"""You are a helpful AI assistant for Aryma Labs. 
 
-User Question: {user_input}
+Based on this product information: {relevant_content[:1000]}
 
-Please provide information about how to contact Aryma Labs, request demos, and get in touch with their team. Include relevant contact methods and next steps."""
-                        elif "product" in user_input.lower():
-                            context = f"""Product Information: Aryma Labs offers various MMM products and tools.
-
-Product Details: {relevant_content[:1500]}
-
-User Question: {user_input}
-
-Please provide detailed information about Aryma Labs' products, tools, and platforms. Explain what each product does and how it helps businesses."""
-                        else:
-                            context = f"""General Information: Aryma Labs is a Marketing Mix Modeling company.
-
-Available Information: {relevant_content[:1500]}
-
-User Question: {user_input}
-
-Please provide a helpful and informative response about Aryma Labs based on the available information. Focus on answering the specific question asked."""
+Please provide information about Aryma Labs' products. Be helpful and conversational."""
                     else:
-                        context = f"""Service/Product Details: Aryma Labs specializes in {CATEGORIES.get(category, category)}. 
+                        system_prompt = f"""You are a helpful AI assistant for Aryma Labs, a Marketing Mix Modeling company. 
 
-Detailed Information: {relevant_content[:1500]}
+Based on this information: {relevant_content[:1000]}
 
-User Question: {user_input}
+Please provide helpful, conversational responses about Aryma Labs."""
+                else:
+                    system_prompt = f"""You are a helpful AI assistant for Aryma Labs. 
 
-Please provide a comprehensive response about {CATEGORIES.get(category, category)} from Aryma Labs. Explain the benefits, features, and how it helps businesses."""
-                    
-                    # Use summarization to generate response
-                    response = self.hf_client.summarization(context)
-                    
-                    if response and hasattr(response, 'summary_text'):
-                        response_text = response.summary_text
-                        if response_text and len(response_text) > 10:
-                            print(f"✅ [HUGGING FACE] SUCCESS! Generated AI response via summarization")
-                            print(f"📏 [HUGGING FACE] Response length: {len(response_text)} characters")
-                            print(f"🔗 [HUGGING FACE] Adding demo link...")
-                            return response_text
-                        else:
-                            print(f"⚠️ [HUGGING FACE] Summarization response too short: {len(response_text) if response_text else 0} chars")
-                    else:
-                        print(f"⚠️ [HUGGING FACE] No summary_text in response")
-                    
-                except Exception as summarization_error:
-                    print(f"❌ [HUGGING FACE] Summarization failed: {str(summarization_error)[:100]}...")
-                    
-                # Try text generation with different approach
-                try:
-                    print("📝 [AI AGENT] Attempting Hugging Face text generation...")
-                    # Use a simple prompt for text generation
-                    simple_prompt = f"Answer this question about {CATEGORIES.get(category, category)}: {user_input}"
-                    
-                    response = self.hf_client.text_generation(simple_prompt, max_new_tokens=100)
-                    
-                    if response and len(response) > 10:
-                        print(f"✅ [HUGGING FACE] SUCCESS! Generated AI response via text generation")
-                        print(f"📏 [HUGGING FACE] Response length: {len(response)} characters")
-                        print(f"🔗 [HUGGING FACE] Adding demo link...")
-                        return response
-                    else:
-                        print(f"⚠️ [HUGGING FACE] Text generation response too short: {len(response) if response else 0} chars")
-                        
-                except Exception as text_gen_error:
-                    print(f"❌ [HUGGING FACE] Text generation failed: {str(text_gen_error)[:100]}...")
+Based on this information about {CATEGORIES.get(category, category)}: {relevant_content[:1000]}
+
+Please provide helpful, conversational responses about {CATEGORIES.get(category, category)} from Aryma Labs."""
                 
+                # Use Hugging Face Router API with requests
+                headers = {
+                    "Authorization": f"Bearer {self.hf_api_key}",
+                    "Content-Type": "application/json"
+                }
+                
+                data = {
+                    "model": "openai/gpt-oss-120b:cerebras",
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_input}
+                    ],
+                    "max_tokens": 200,
+                    "temperature": 0.7
+                }
+                
+                response = requests.post(self.api_url, headers=headers, json=data, timeout=30)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    ai_response = result["choices"][0]["message"]["content"]
+                    
+                    if ai_response and len(ai_response) > 20:
+                        print(f"✅ [HUGGING FACE] SUCCESS! Generated conversational response")
+                        print(f"📏 [HUGGING FACE] Response length: {len(ai_response)} characters")
+                        print(f"🔗 [HUGGING FACE] Adding demo link...")
+                        return ai_response
+                    else:
+                        print(f"⚠️ [HUGGING FACE] Response too short: {len(ai_response) if ai_response else 0} chars")
+                else:
+                    print(f"❌ [HUGGING FACE] API error: {response.status_code} - {response.text[:100]}")
+                    
             except Exception as e:
-                print(f"❌ [HUGGING FACE] InferenceClient error: {e}")
+                print(f"❌ [HUGGING FACE] Router API error: {str(e)[:100]}...")
                 print("🔄 [AI AGENT] Falling back to keyword-based response...")
         else:
             print("❌ [AI AGENT] No Hugging Face client available")
