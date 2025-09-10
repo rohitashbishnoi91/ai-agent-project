@@ -149,6 +149,14 @@ Please provide natural, conversational responses about Aryma Labs. Be helpful an
 Based on this information: {relevant_content[:1000]}
 
 Please provide information about contacting Aryma Labs and requesting demos. Be helpful and conversational."""
+                    elif "founder" in user_input.lower() or "ceo" in user_input.lower() or "leadership" in user_input.lower():
+                        system_prompt = f"""You are a helpful AI assistant for Aryma Labs. 
+
+Based on this information: {relevant_content[:1000]}
+
+IMPORTANT: Only provide information that is explicitly mentioned in the provided content. If founder/leadership information is not available in the content, politely state that this information is not available in the current data and suggest checking the company website or LinkedIn for the most up-to-date information.
+
+Please be helpful and conversational."""
                     elif "product" in user_input.lower():
                         system_prompt = f"""You are a helpful AI assistant for Aryma Labs. 
 
