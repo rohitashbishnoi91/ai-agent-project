@@ -180,7 +180,7 @@ Please provide helpful, conversational responses about {CATEGORIES.get(category,
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_input}
                     ],
-                    "max_tokens": 200,
+                    "max_tokens": 800,
                     "temperature": 0.7
                 }
                 
