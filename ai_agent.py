@@ -24,7 +24,31 @@ class ArymalabsAgent:
     
     def get_initial_question(self) -> str:
         """Return the initial question for new users"""
-        return "Are you looking for MMM Services, MMM Products, or Experimentation Products?"
+        return "Hello! I'm the Aryma Labs AI Agent. I can help you learn about our MMM Services, MMM Products, or Experimentation Products. What would you like to know?"
+    
+    def handle_general_query(self, user_input: str) -> str:
+        """Handle general queries about Aryma Labs"""
+        print(f"🌐 [GENERAL] Handling general query: {user_input[:50]}...")
+        
+        # Get all available content for general queries
+        all_content = ""
+        for category, content in self.scraped_data.get("categorized_content", {}).items():
+            all_content += f"\n\n{category}:\n{content}"
+        
+        # Add main content if available
+        if self.scraped_data.get("main_content"):
+            all_content = self.scraped_data["main_content"] + all_content
+        
+        if not all_content.strip():
+            all_content = "Aryma Labs is a company specializing in Marketing Mix Modeling (MMM) solutions, products, and experimentation services."
+        
+        # Generate response using all available content
+        response = self.generate_response(user_input, all_content, "GENERAL")
+        
+        # Add demo link
+        response += f"\n\n[Contact Us for Demo]({DEMO_URL})"
+        
+        return response
     
     def process_user_response(self, user_input: str) -> str:
         """Process user response and determine their category"""
@@ -46,9 +70,9 @@ class ArymalabsAgent:
             self.user_category = "MMM_SERVICES"
             print(f"📂 [PROCESS] Category determined: MMM_SERVICES (default for 'mmm')")
         else:
-            # If unclear, ask for clarification
-            print(f"❓ [PROCESS] No clear category, returning clarification question")
-            return "I'm not sure which category you're interested in. Please specify: MMM Services, MMM Products, or Experimentation Products?"
+            # Handle general queries about Aryma Labs
+            print(f"❓ [PROCESS] No clear category, trying to answer generally")
+            return self.handle_general_query(user_input)
         
         # Get relevant content for the selected category
         relevant_content = self.get_relevant_content(self.user_category)

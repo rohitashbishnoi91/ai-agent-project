@@ -12,152 +12,226 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for better styling
+# Custom CSS for modern styling
 st.markdown("""
 <style>
     .main-header {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: #1f77b4;
+        font-size: 3rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+        margin-bottom: 1rem;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .subtitle {
+        font-size: 1.2rem;
+        color: #6c757d;
+        text-align: center;
+        margin-bottom: 3rem;
+        font-weight: 300;
+    }
+    .welcome-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 20px;
         text-align: center;
         margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     }
-    .chat-message {
-        padding: 1rem;
-        border-radius: 0.5rem;
-        margin-bottom: 1rem;
-        border-left: 4px solid #1f77b4;
+    .feature-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin: 1rem 0;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        border-left: 4px solid #667eea;
+    }
+    .chat-container {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        padding: 2rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
     }
     .user-message {
-        background-color: #f0f2f6;
-        border-left-color: #ff6b6b;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        margin-left: 20%;
+        border-radius: 20px 20px 5px 20px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        animation: slideIn 0.3s ease-out;
     }
     .agent-message {
-        background-color: #e8f4fd;
-        border-left-color: #1f77b4;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        margin-right: 20%;
+        border-radius: 20px 20px 20px 5px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        animation: slideIn 0.3s ease-out;
     }
     .demo-link {
-        background-color: #ff6b6b;
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
         color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 0.25rem;
+        padding: 0.8rem 1.5rem;
+        border-radius: 25px;
         text-decoration: none;
         display: inline-block;
         margin-top: 1rem;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(255,107,107,0.3);
+        transition: all 0.3s ease;
     }
     .demo-link:hover {
-        background-color: #ff5252;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255,107,107,0.4);
         color: white;
         text-decoration: none;
+    }
+    .sidebar-content {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .status-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 8px;
+        animation: pulse 2s infinite;
+    }
+    .status-online {
+        background-color: #28a745;
+    }
+    .status-offline {
+        background-color: #dc3545;
+    }
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+    .stChatInput > div > div > div {
+        border-radius: 25px !important;
+        border: 2px solid #667eea !important;
+    }
+    .stChatInput > div > div > div:focus {
+        border-color: #764ba2 !important;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+    }
+    .quick-actions {
+        display: flex;
+        gap: 1rem;
+        margin: 1rem 0;
+        flex-wrap: wrap;
+    }
+    .quick-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 0.8rem 1.5rem;
+        border-radius: 25px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    .quick-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
     }
 </style>
 """, unsafe_allow_html=True)
 
-def initialize_session_state():
-    """Initialize session state variables"""
-    if 'agent' not in st.session_state:
-        st.session_state.agent = None
-    if 'conversation_started' not in st.session_state:
-        st.session_state.conversation_started = False
-    if 'messages' not in st.session_state:
-        st.session_state.messages = []
-    if 'scraping_completed' not in st.session_state:
-        st.session_state.scraping_completed = False
-
-def scrape_website():
-    """Scrape the website and initialize the agent"""
-    with st.spinner("Scraping Aryma Labs website..."):
-        scraper = ArymalabsScraper()
-        result = scraper.scrape_website()
-        
-        # Save the scraped data
-        with open('scraped_content.json', 'w') as f:
-            json.dump(result, f, indent=2)
-        
-        # Initialize the agent
-        st.session_state.agent = ArymalabsAgent()
-        st.session_state.scraping_completed = True
-        
-        st.success("Website scraping completed! AI Agent is ready.")
-        return True
-
-def display_chat_message(role, content):
-    """Display a chat message with appropriate styling"""
-    if role == "user":
-        st.markdown(f"""
-        <div class="chat-message user-message">
-            <strong>You:</strong> {content}
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown(f"""
-        <div class="chat-message agent-message">
-            <strong>AI Agent:</strong> {content}
-        </div>
-        """, unsafe_allow_html=True)
-
 def main():
-    initialize_session_state()
-    
     # Header
     st.markdown('<h1 class="main-header">🤖 Aryma Labs AI Agent</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">Your intelligent assistant for MMM Services, Products & Experimentation</p>', unsafe_allow_html=True)
+    
+    # Welcome card
+    st.markdown("""
+    <div class="welcome-card">
+        <h3>🚀 Welcome to Aryma Labs AI Assistant!</h3>
+        <p>I can help you learn about our Marketing Mix Modeling solutions, products, and experimentation services. 
+        Ask me anything about our offerings or company!</p>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Sidebar
     with st.sidebar:
-        st.header("About")
-        st.write("This AI agent helps you discover Aryma Labs' services and products:")
-        st.write("• **MMM Services** - Marketing Mix Modeling services")
-        st.write("• **MMM Products** - Marketing Mix Modeling tools")
-        st.write("• **Experimentation Products** - A/B testing and experimentation tools")
+        st.markdown('<div class="sidebar-content">', unsafe_allow_html=True)
+        st.markdown("### 🎯 Quick Actions")
         
-        st.header("Actions")
-        if st.button("🔄 Reset Conversation"):
-            st.session_state.conversation_started = False
-            st.session_state.messages = []
-            st.session_state.agent = None
-            st.session_state.scraping_completed = False
-            st.rerun()
+        # Quick action buttons
+        if st.button("🏢 About Aryma Labs", key="about_btn"):
+            st.session_state.quick_action = "about"
+        if st.button("🔧 MMM Services", key="services_btn"):
+            st.session_state.quick_action = "services"
+        if st.button("📦 MMM Products", key="products_btn"):
+            st.session_state.quick_action = "products"
+        if st.button("🧪 Experimentation", key="experiment_btn"):
+            st.session_state.quick_action = "experimentation"
+        if st.button("📞 Contact Demo", key="demo_btn"):
+            st.session_state.quick_action = "demo"
         
-        if st.button("📊 View Scraped Data"):
-            if st.session_state.scraping_completed:
-                with open('scraped_content.json', 'r') as f:
-                    data = json.load(f)
-                st.json(data)
-            else:
-                st.warning("Please scrape the website first.")
+        st.markdown("### 📊 Status")
+        st.markdown('<span class="status-indicator status-online"></span>AI Agent Online', unsafe_allow_html=True)
+        st.markdown('<span class="status-indicator status-online"></span>Web Scraper Active', unsafe_allow_html=True)
+        
+        st.markdown("### 💡 Tips")
+        st.markdown("""
+        - Ask about our services, products, or company
+        - Be specific about what you need
+        - I can help with technical questions
+        - Request a demo anytime!
+        """)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
     
-    # Main content area
-    # Check if we need to scrape the website
-    if not st.session_state.scraping_completed:
-        st.info("👋 Welcome! Let's start by scraping the Aryma Labs website to gather the latest information.")
-        if st.button("🚀 Start Scraping", type="primary"):
-            if scrape_website():
-                st.rerun()
-    else:
-        col1, col2 = st.columns([2, 1])
+    # Initialize session state
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+        st.session_state.agent = None
+        st.session_state.quick_action = None
+    
+    # Initialize agent
+    if st.session_state.agent is None:
+        with st.spinner("🤖 Initializing AI Agent..."):
+            try:
+                st.session_state.agent = ArymalabsAgent()
+                st.success("✅ AI Agent ready!")
+            except Exception as e:
+                st.error(f"❌ Error initializing agent: {e}")
+                return
+    
+    # Handle quick actions
+    if st.session_state.quick_action:
+        quick_actions = {
+            "about": "Tell me about Aryma Labs",
+            "services": "I'm interested in MMM Services",
+            "products": "I'm interested in MMM Products", 
+            "experimentation": "I'm interested in Experimentation Products",
+            "demo": "I want to request a demo"
+        }
         
-        with col1:
-            # Display conversation
-            st.subheader("💬 Chat with AI Agent")
+        if st.session_state.quick_action in quick_actions:
+            user_input = quick_actions[st.session_state.quick_action]
+            st.session_state.quick_action = None
             
-            # Display existing messages
-            for message in st.session_state.messages:
-                display_chat_message(message["role"], message["content"])
-            
-            # Start conversation if not started
-            if not st.session_state.conversation_started:
-                initial_question = st.session_state.agent.get_initial_question()
-                st.session_state.messages.append({
-                    "role": "assistant", 
-                    "content": initial_question
-                })
-                display_chat_message("assistant", initial_question)
-                st.session_state.conversation_started = True
-        
-        # Chat input - moved outside columns to avoid StreamlitAPIException
-        user_input = st.chat_input("Type your message and press Enter...")
-        
-        if user_input:
             # Add user message
             st.session_state.messages.append({
                 "role": "user",
@@ -165,61 +239,69 @@ def main():
             })
             
             # Get agent response
-            with st.spinner("AI Agent is thinking..."):
+            with st.spinner("🤖 AI Agent is thinking..."):
                 try:
-                    # Debug: Print what we're actually processing
-                    print(f"Processing user input: '{user_input}'")
-                    print(f"Message count: {len(st.session_state.messages)}")
-                    
-                    # Check if this is the first user response after the initial question
                     if len(st.session_state.messages) == 1:
-                        # First response after initial question
-                        print("Using process_user_response")
                         response = st.session_state.agent.process_user_response(user_input)
                     else:
-                        # Follow-up questions
-                        print("Using handle_follow_up")
                         response = st.session_state.agent.handle_follow_up(user_input)
                 except Exception as e:
-                    st.error(f"Error: {e}")
-                    response = "I apologize, but I'm having trouble processing your request. Please try again."
+                    response = f"I apologize, but I'm having trouble processing your request. Please try again. Error: {str(e)}"
             
             # Add agent response
             st.session_state.messages.append({
                 "role": "assistant",
                 "content": response
             })
-            st.rerun()  # Refresh to show the new messages
+            st.rerun()
+    
+    # Chat interface
+    st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+    
+    # Display messages
+    for message in st.session_state.messages:
+        if message["role"] == "user":
+            st.markdown(f'<div class="user-message">{message["content"]}</div>', unsafe_allow_html=True)
+        else:
+            st.markdown(f'<div class="agent-message">{message["content"]}</div>', unsafe_allow_html=True)
+    
+    # Chat input
+    user_input = st.chat_input("💬 Ask me anything about Aryma Labs...")
+    
+    if user_input:
+        # Add user message
+        st.session_state.messages.append({
+            "role": "user",
+            "content": user_input
+        })
         
-        with col2:
-            st.subheader("📋 Quick Info")
-            
-            if st.session_state.scraping_completed:
-                # Display some stats about scraped data
-                try:
-                    with open('scraped_content.json', 'r') as f:
-                        data = json.load(f)
-                    
-                    st.metric("Pages Scraped", data.get("total_pages_scraped", 0))
-                    st.metric("Links Found", data.get("links_found", 0))
-                    
-                    # Show categories
-                    categories = data.get("categorized_content", {})
-                    if categories:
-                        st.write("**Content Categories:**")
-                        for category, content in categories.items():
-                            if content:
-                                st.write(f"• {category.replace('_', ' ').title()}")
-                    
-                except FileNotFoundError:
-                    st.warning("Scraped data not found.")
-            else:
-                st.info("Scrape the website to see content statistics.")
-            
-            # Demo link
-            st.markdown("---")
-            st.markdown("### 🎯 Try Our Demo")
-            st.markdown(f"[Visit Demo Page](https://www.arymalabs.com)")
+        # Get agent response
+        with st.spinner("🤖 AI Agent is thinking..."):
+            try:
+                if len(st.session_state.messages) == 1:
+                    response = st.session_state.agent.process_user_response(user_input)
+                else:
+                    response = st.session_state.agent.handle_follow_up(user_input)
+            except Exception as e:
+                response = f"I apologize, but I'm having trouble processing your request. Please try again. Error: {str(e)}"
+        
+        # Add agent response
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": response
+        })
+        st.rerun()
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Footer
+    st.markdown("---")
+    st.markdown("""
+    <div style="text-align: center; color: #6c757d; margin-top: 2rem;">
+        <p>🤖 Powered by Aryma Labs AI | Built with Streamlit</p>
+        <p>© 2024 Aryma Labs. All rights reserved.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
