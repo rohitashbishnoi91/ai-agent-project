@@ -112,14 +112,23 @@ class ArymalabsAgent:
                 # Use summarization task which works with the current API
                 try:
                     print("📊 [AI AGENT] Attempting Hugging Face summarization...")
-                    # Create a context for summarization
-                    context = f"""Aryma Labs specializes in {CATEGORIES.get(category, category)}. 
+                    # Create a dynamic context for summarization
+                    if category == "GENERAL":
+                        context = f"""Aryma Labs is a company that provides Marketing Mix Modeling (MMM) solutions, products, and experimentation services.
 
-Available content: {relevant_content[:1000]}
+Available information about Aryma Labs: {relevant_content[:1500]}
 
 User question: {user_input}
 
-Please provide a helpful response based on the content above."""
+Please provide a comprehensive and helpful response about Aryma Labs based on the information above. Be specific and informative."""
+                    else:
+                        context = f"""Aryma Labs specializes in {CATEGORIES.get(category, category)}. 
+
+Available content about {CATEGORIES.get(category, category)}: {relevant_content[:1500]}
+
+User question: {user_input}
+
+Please provide a detailed and helpful response about {CATEGORIES.get(category, category)} based on the content above. Be specific and informative."""
                     
                     # Use summarization to generate response
                     response = self.hf_client.summarization(context)
@@ -173,22 +182,53 @@ Please provide a helpful response based on the content above."""
         return fallback_response
     
     def generate_fallback_response(self, user_input: str, relevant_content: str, category: str) -> str:
-        """Generate a fallback response when AI API is not available"""
-        category_name = CATEGORIES.get(category, category)
+        """Generate a dynamic fallback response when AI API is not available"""
+        user_input_lower = user_input.lower()
         
-        # Simple keyword-based response
-        if "what" in user_input.lower() or "tell me" in user_input.lower():
-            return f"Based on our {category_name.lower()}, here's what we offer: {relevant_content[:200]}..."
-        elif "how" in user_input.lower():
-            return f"Our {category_name.lower()} help you with advanced analytics and modeling solutions."
-        elif "price" in user_input.lower() or "cost" in user_input.lower():
-            return f"For pricing information about our {category_name.lower()}, please contact our sales team."
+        if category == "GENERAL":
+            # For general queries, provide comprehensive information
+            if "about" in user_input_lower or "what is" in user_input_lower or "tell me" in user_input_lower:
+                return f"Aryma Labs is a company specializing in Marketing Mix Modeling (MMM) solutions. {relevant_content[:800]}..."
+            elif "contact" in user_input_lower or "how to contact" in user_input_lower:
+                return f"To contact Aryma Labs, you can reach out through our website or request a demo. {relevant_content[:400]}..."
+            elif "services" in user_input_lower:
+                return f"Aryma Labs offers comprehensive MMM services including analysis, consulting, and implementation. {relevant_content[:600]}..."
+            elif "products" in user_input_lower:
+                return f"Our MMM products include advanced analytics tools and platforms. {relevant_content[:600]}..."
+            else:
+                return f"Aryma Labs provides Marketing Mix Modeling solutions and services. {relevant_content[:600]}..."
         else:
-            return f"Thank you for your interest in our {category_name.lower()}. {relevant_content[:200]}..."
+            category_name = CATEGORIES.get(category, category)
+            
+            # Dynamic responses based on user intent
+            if "what" in user_input_lower or "tell me" in user_input_lower:
+                return f"Based on our {category_name.lower()}, here's what we offer: {relevant_content[:600]}..."
+            elif "how" in user_input_lower:
+                return f"For {category_name.lower()}, here's how we can help: {relevant_content[:600]}..."
+            elif "contact" in user_input_lower or "demo" in user_input_lower:
+                return f"To learn more about our {category_name.lower()}, please contact us for a demo. {relevant_content[:400]}..."
+            elif "price" in user_input_lower or "cost" in user_input_lower:
+                return f"For pricing information about our {category_name.lower()}, please contact us for a personalized quote. {relevant_content[:400]}..."
+            else:
+                return f"Here's detailed information about our {category_name.lower()}: {relevant_content[:600]}..."
     
     def handle_follow_up(self, user_input: str) -> str:
         """Handle follow-up questions"""
         print(f"\n🔄 [FOLLOW-UP] Handling follow-up: {user_input[:50]}...")
+        
+        user_input_lower = user_input.lower()
+        
+        # Check for general queries that should use all content
+        general_queries = [
+            'about aryma', 'what is aryma', 'tell me about aryma', 'who is aryma',
+            'company', 'company info', 'about the company', 'what does aryma do',
+            'overview', 'introduction', 'background', 'history', 'contact',
+            'how to contact', 'where is aryma', 'aryma labs', 'more information'
+        ]
+        
+        if any(query in user_input_lower for query in general_queries):
+            print(f"🌐 [FOLLOW-UP] General query detected, using all content")
+            return self.handle_general_query(user_input)
         
         if not self.user_category:
             # Try to determine category from user input
@@ -197,8 +237,7 @@ Please provide a helpful response based on the content above."""
         
         print(f"📂 [FOLLOW-UP] Current category: {self.user_category}")
         
-        # Check if user wants to switch categories
-        user_input_lower = user_input.lower()
+        # Check for category change requests
         old_category = self.user_category
         
         # Check for category change requests
